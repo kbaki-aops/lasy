@@ -2,7 +2,7 @@
   "name": "lasy",
   "displayName": "Lasy",
   "description": "Hi! I'm Lasy. I'm a VS Code extension that allows for Asymptote files to be compiled to and previewed in EPS format.",
-  "version": "0.0.3",
+  "version": "0.0.4",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/kbaki-aops/lasy.git"
@@ -24,16 +24,6 @@
           "type": ["string", "null"],
           "default": "asy",
           "description": "Lasy's path to the asy binary."
-        },
-        "lasy.ps2pdfPath": {
-          "type": ["string", "null"],
-          "default": "ps2pdf",
-          "description": "Lasy's path to the ps2pdf binary."
-        },
-        "lasy.pdf2svgPath": {
-          "type": ["string", "null"],
-          "default": "pdf2svg",
-          "description": "Lasy's path to the pdf2svg binary."
         }
 			}
 		}
