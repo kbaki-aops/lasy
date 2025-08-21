@@ -67,6 +67,14 @@ class Lasy {
     try {
       await this._compile(filename, "svg");
       await this._copy(filename, "svg");
+
+      // todo: check if `gs` exists
+      if (this._config.get("png")) {
+        await this._compile(filename, "eps");
+        await this._rasterise();
+        await this._copy(filename, "png");
+      }
+
       await this._updatePanel(filename, (await this._makePanel(filename)).panel);
       console.log(`Lasy has fulfilled her work with ${filename}.asy!`);
     } catch (e) {
@@ -90,6 +98,20 @@ class Lasy {
     console.log(`Lasy is making ${filename}.${filetype}…`);
     fs.copyFileSync(`${this._dir}/temp.${filetype}`, `${filename}.${filetype}`);
   }
+
+  private async _rasterise(): Promise<void> {
+    console.log(`Lasy is rasterising ${this._dir}/temp.eps to PNG…`);
+    (({ stdout, stderr }) => {
+      this._channel.appendLine(stdout);
+      this._channel.appendLine(stderr);
+    })(await exec(`gs -q -dSAFER -dBATCH -dNOPAUSE -dEPSCrop -sDEVICE=png16m -dGraphicsAlphaBits=4 \
+      -r${this._config.get("gs.dpi")} -sOutputFile=${this._dir}/temp.png ${this._dir}/temp.eps`
+    ));
+  }
+
+//  private async measureEps(filename: string): Promise<{ width: number, height: number, sf: number }> {
+//    return bboxToDimensions((await exec(`gs -q -dBATCH -dNOPAUSE -sDEVICE=bbox ${filename}`)).stderr.trim().split(' ').slice(-4).map((e) => Number(e)));
+//  }
 
   private async _makePanel(filename: string): Promise<Panel> {
     if (this._panels.has(filename)) {
@@ -133,3 +155,11 @@ class Lasy {
     `;
   }
 }
+
+//function bboxToDimensions(bbox: Array<number>) {
+//  return {
+//    width: bbox[2]-bbox[0],
+//    height: bbox[3]-bbox[1],
+//    sf: 200/Math.min(bbox[2]-bbox[0], bbox[3]-bbox[1])
+//  };
+//}

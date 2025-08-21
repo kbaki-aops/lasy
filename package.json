@@ -2,7 +2,7 @@
   "name": "lasy",
   "displayName": "Lasy",
   "description": "I'm a VS Code extension that compiles Asymptote files to SVG format and displays the output.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "kbaki-aops",
   "license": "MIT",
 	"repository": {
@@ -26,6 +26,16 @@
           "type": "string",
           "default": "asy",
           "description": "Lasy's path to the asy binary."
+        },
+        "lasy.png": {
+          "type": "boolean",
+          "default": false,
+          "description": "EXPERIMENTAL, uses GhostScript: Whether Lasy should rasterise to PNG."
+        },
+        "lasy.gs.dpi": {
+          "type": "int",
+          "default": 720,
+          "description": "EXPERIMENTAL, uses GhostScript: The DPI of the PNG."
         }
 			}
 		}
