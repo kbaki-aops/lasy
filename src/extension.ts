@@ -1,5 +1,6 @@
 //todo: compile to static eps and svg
 //todo: the async/awaits in _compile
+//todo: check if gs exists before rasterise
 "use strict";
 
 import * as vscode from "vscode";
@@ -68,7 +69,6 @@ class Lasy {
       await this._compile(filename, "svg");
       await this._copy(filename, "svg");
 
-      // todo: check if `gs` exists
       if (this._config.get("png")) {
         await this._compile(filename, "eps");
         await this._rasterise();
@@ -108,10 +108,6 @@ class Lasy {
       -r${this._config.get("gs.dpi")} -sOutputFile=${this._dir}/temp.png ${this._dir}/temp.eps`
     ));
   }
-
-//  private async measureEps(filename: string): Promise<{ width: number, height: number, sf: number }> {
-//    return bboxToDimensions((await exec(`gs -q -dBATCH -dNOPAUSE -sDEVICE=bbox ${filename}`)).stderr.trim().split(' ').slice(-4).map((e) => Number(e)));
-//  }
 
   private async _makePanel(filename: string): Promise<Panel> {
     if (this._panels.has(filename)) {
@@ -155,11 +151,3 @@ class Lasy {
     `;
   }
 }
-
-//function bboxToDimensions(bbox: Array<number>) {
-//  return {
-//    width: bbox[2]-bbox[0],
-//    height: bbox[3]-bbox[1],
-//    sf: 200/Math.min(bbox[2]-bbox[0], bbox[3]-bbox[1])
-//  };
-//}
