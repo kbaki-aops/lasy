@@ -66,11 +66,11 @@ class Lasy {
   public async work(filename: string): Promise<void> {
     console.log(`Lasy has begun her work with ${filename}.asy…`);
     try {
-      await this._compile(filename, "svg");
+      await this._compile(filename, { filetype: "svg" });
       await this._copy(filename, "svg");
 
       if (this._config.get("png")) {
-        await this._compile(filename, "eps");
+        await this._compile(filename, { filetype: "eps", loudly: false });
         await this._rasterise();
         await this._copy(filename, "png");
       }
@@ -85,12 +85,14 @@ class Lasy {
     }
   }
 
-  private async _compile(filename: string, filetype: string): Promise<void> {
-    console.log(`Lasy is making ${this._dir}/temp.${filetype}…`);
+  private async _compile(filename: string, options: { filetype: string, loudly?: boolean }): Promise<void> {
+    console.log(`Lasy is making ${this._dir}/temp.${options.filetype}…`);
     (({ stdout, stderr }) => {
-      this._channel.appendLine(stdout);
-      this._channel.appendLine(stderr);
-    })(await exec(`${this._config.get("asyPath", "asy")} -f ${filetype} -outname ${this._dir}/temp ${filename}`,
+      if (options.loudly !== false) {
+        this._channel.appendLine(stdout);
+        this._channel.appendLine(stderr);
+      }
+    })(await exec(`${this._config.get("asyPath", "asy")} -f ${options.filetype} -outname ${this._dir}/temp ${filename}`,
       { 'cwd': `${filename.split('/').slice(0, -1).join('/')}`}));
   }
 
