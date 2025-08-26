@@ -5,8 +5,13 @@ Hi! My name is **Lasy**¹, said /ˈlæsi/, like the word "lassie". My pronouns a
 If you've already installed me, then you can test me out by opening `extension.test.asy` in my `src/test` folder, deleting the little `ɬ` character on the first line, and then saving. With any luck, I'll open a panel to the right where you can look at an SVG render of your Asymptote file. I'll also make a copy of the SVG file in the same directory as your Asymptote file.
 
 If you're looking to get started, I *think* that there's two ways to install me:
-- Install me as a `.vsix` extension file.
-- Clone [my repository](https://github.com/kbaki-aops/lasy.git).
+- Install me as a `.vsix` extension file (VS Code Extension options, "Install from .vsix")
+- If you want the full [repository](https://github.com/kbaki-aops/lasy.git) for testing and improvement:
+   * `npm install` in the repo
+   * `npm run test` in the repo to build and test
+   * open the lasy folder in VS Code
+   * Press F5 to open a window with the extension activated 
+   * Save a change to the `extension.test.asy` file and wait for the side panel to open with the rendered svg.
 
 Unfortunately, my knowledge of this stuff is rather lacking, so I apologize if this leads you astray.
 
