@@ -4,6 +4,8 @@ node_modules
 .vscode
 .vscode-test
 
-.gitignore
 .vscodeignore
 vsc-extension-quickstart.md
+
+**/*.png
+**/*.svg
