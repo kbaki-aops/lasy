@@ -1,23 +1,22 @@
 # Lasy README
 
-Hi! My name is **Lasy**¹, said /ˈlæsi/, like the word "lassie". My pronouns are **she**/**it**. I'm a VS Code extension that compiles Asymptote files to SVG format and displays the output. It's great to meet you.
+Hi! My name is **Lasy**¹, said /ˈlæsi/, like the word "lassie". My pronouns are **she**/**it**. Perhaps you've met my brother [Jaxy](https://github.com/kbaki-aops/jaxy.git). I'm a VS Code extension that compiles Asymptote files to SVG format and displays the output. It's great to meet you.
 
-If you've already installed me, then you can test me out by opening `extension.test.asy` in my `src/test` folder, deleting the little `ɬ` character on the first line, and then saving. With any luck, I'll open a panel to the right where you can look at an SVG render of your Asymptote file. I'll also make a copy of the SVG file in the same directory as your Asymptote file.
+## Quick start
 
-If you're looking to get started, I *think* that there's two ways to install me:
-- Install me as a `.vsix` extension file (VS Code Extension options, "Install from .vsix")
-- If you want the full [repository](https://github.com/kbaki-aops/lasy.git) for testing and improvement:
-   * `npm install` in the repo
-   * `npm run test` in the repo to build and test
-   * open the lasy folder in VS Code
-   * Press F5 to open a window with the extension activated 
-   * Save a change to the `extension.test.asy` file and wait for the side panel to open with the rendered svg.
-
-Unfortunately, my knowledge of this stuff is rather lacking, so I apologize if this leads you astray.
-
-I have only one dependency, namely the Asymptote compiler itself, which should be easy to install:
+You can install me by downloading my repository's file `lasy-*.vsix`, where `*` denotes the version number, and then following [the instructions on the VS Code documentation](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix). You'll also need to install the Asymptote compiler itself:
 - On Windows, install the `.exe` file from [the Asymptote website](https://asymptote.sourceforge.io).
 - On Unix, run `brew install asymptote`, or the equivalent command for your package manager.
+
+Once you've installed me, you can test me out by opening `extension.test.asy` in my `/lasy/src/test` folder, deleting the little `ɬ` character on the first line, and then saving. With any luck, I'll open a panel to the right where you can look at an SVG render of your Asymptote file. I'll also make a copy of the SVG file in the same directory as your Asymptote file.
+
+## Slow start
+
+If you'd like to acquire my codebase for testing, improvement, and other whatnots, then you can clone my [repository](https://github.com/kbaki-aops/lasy.git). Once you've done this, your choices are manifold:
+- If you'd just like to build me as a `.vsix` file, then run `vsce package` from the folder `/lasy`.
+- If you'd like to iterate on me:
+  * Run `npm install | npm run test` from the folder `/lasy` to acquire my dependencies;
+  * Press `F5` to open a new VS Code window in which I'll be active.
 
 I compile Asymptote files using the shell command `asy`. If I'm having trouble locating the Asymptote installation, then you can manually let me know in the `lasy.asyPath` property of my `package.json` file.
 
@@ -35,18 +34,18 @@ But if you're importing any other Asymptote file, then you have to do one of two
 - Put the file in the same directory as your working file;
 ```
 ├─ fileToImport.asy
-├─ workingFile.asy
+└─ workingFile.asy
 ```
 ```
 import fileToImport;
 ```
 - Or, import the file using its global path.
 ```
-├─ path/
-   ├─ to/
-      ├─ fileToImport.asy
+└─ path/
+   └─ to/
+      └─ fileToImport.asy
 ...
-├─ workingFile.asy
+└─ workingFile.asy
 ```
 ```
 import "path/to/fileToImport" as fileToImport;
@@ -56,6 +55,6 @@ Well, that's all for me! Let me know if you have any lingering questions. I'm lo
 
 ---
 
-¹ You can think of my name as a blend of any of the phrases "***l***ook at ***Asy***mptote", "***l***oad ***Asy***mptote", "***l***ovely ***Asy***mptote", "***l***ambda ***Asy***mptote", or "***L*** ***Asy***mptote"².
+¹ You can think of my name as a blend of any of the phrases "***l***ook at ***Asy***mptote", "***l***ocal ***Asy***mptote", "***l***oad ***Asy***mptote", "***l***ovely ***Asy***mptote", "***l***ambda ***Asy***mptote", or "***L*** ***Asy***mptote"².
 
 ² ⟨L⟩ is my favorite letter of the Latin alphabet. Some of my favorite tokens in other writing systems are Greek ⟨Λ⟩, Cyrillic ⟨Л⟩, Devanāgarī ⟨ल⟩, Arabic ⟨ل⟩, and Hebrew ⟨ל⟩.

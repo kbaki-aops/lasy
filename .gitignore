@@ -1,4 +1,9 @@
 out
 dist
 node_modules
-.vscode-test/
+.vscode
+.vscode-test
+
+.gitignore
+.vscodeignore
+vsc-extension-quickstart.md
