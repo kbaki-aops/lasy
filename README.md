@@ -1,5 +1,7 @@
 # Lasy README
 
+## Hello
+
 Hi! My name is **Lasy**¹, said /ˈlæsi/, like the word "lassie". My pronouns are **she**/**it**. Perhaps you've met my brother [Jaxy](https://github.com/kbaki-aops/jaxy.git). I'm a VS Code extension that compiles Asymptote files to SVG format and displays the output. It's great to meet you.
 
 ## Quick start
@@ -50,6 +52,12 @@ import fileToImport;
 ```
 import "path/to/fileToImport" as fileToImport;
 ```
+
+## Issues
+
+- There were two issues here, but both were fixed before the most recent deployment.
+
+## Farewell
 
 Well, that's all for me! Let me know if you have any lingering questions. I'm looking forward to us working together!
 

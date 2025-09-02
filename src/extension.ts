@@ -1,16 +1,12 @@
-//todo: compile to static eps and svg
-//todo: the async/awaits in _compile
-//todo: check if gs exists before rasterise
 "use strict";
 
-import * as vscode from "vscode";
-import * as path from "path";
-import * as fs from "fs";
-import * as os from "os";
+import vscode from "vscode";
 
-import util from "node:util";
-import childProcess from "node:child_process";
-const exec = util.promisify(childProcess.exec);
+import fs from "fs";
+import os from "os";
+import path from "path";
+
+import cp from "child_process";
 
 let lasy: Lasy;
 
@@ -19,21 +15,27 @@ type Panel = {
   watcher: vscode.FileSystemWatcher;
 }
 
-export function activate() {
+const when = <T>(condition: boolean) => (deed: T): T | void => { if (condition) { return deed; } };
+const _map = <T,U>(f: ($t: T) => U) => (xs: T[]): U[] => xs.map(f);
+// go away linter
+// but thank u for ur lintwork
+// const loudly = <T>(thing: T): T => { console.log(thing); return thing; };
+
+export function activate(): void {
   console.log("Lasy is waking up…");
   lasy = new Lasy();
   console.log("Lasy is awake!");
 
-  vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
-    ((path: Array<string>) => {
-      if (path.pop() === 'asy') {
-        lasy.work(path.join('.'));
-      }
-    })(document.uri.fsPath.split('.'));
-  });
+  const backwards = (s: string): string => [...s].reverse().join('');
+  const asunder = (wedge: string) => (s: string): string[] => s.split(wedge, 2);
+
+  vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) =>
+    ((path: string[]) => (when (path[1] === 'asy') (() => lasy.work(path[0]))))
+      (((_map (backwards) (asunder ('.') (backwards(document.uri.fsPath)))).reverse()))
+  );
 }
 
-export function deactivate() {
+export function deactivate(): void {
   console.log("Lasy is going to sleep…");
   try {
     for (const panel of lasy.panels.values()) {
@@ -47,109 +49,119 @@ export function deactivate() {
 }
 
 class Lasy {
-  private _channel: vscode.OutputChannel;
-  private _config: vscode.WorkspaceConfiguration;
-  private _panels: Map<string, Panel>;
-  private _dir: string;
+  channel: vscode.OutputChannel;
+  config: vscode.WorkspaceConfiguration;
+  panels: Map<string, Panel>;
+  dir: string;
 
   constructor() {
-    this._channel = vscode.window.createOutputChannel("lasy");
-    this._config = vscode.workspace.getConfiguration("lasy");
-    this._panels = new Map();
-    this._dir = fs.mkdtempSync(os.tmpdir());
+    this.channel = vscode.window.createOutputChannel("lasy");
+    this.config = vscode.workspace.getConfiguration("lasy");
+    this.panels = new Map();
+    this.dir = fs.mkdtempSync(os.tmpdir());
   }
 
-  public get panels(): Map<string, Panel> {
-    return this._panels;
-  }
-
-  public async work(filename: string): Promise<void> {
+  async work(filename: string): Promise<void> {
     console.log(`Lasy has begun her work with ${filename}.asy…`);
     try {
-      await this._compile(filename, { filetype: "svg" });
-      await this._copy(filename, "svg");
+      await this.wipe(filename);
+      try {
+        await this.compile(filename, "svg", true);
+      } catch (e) {
+        console.log(`Lasy has found no new work for ${filename}.asy.`);
+        return;
+      }
+      await this.copy(filename, "svg");
 
-      if (this._config.get("png")) {
-        await this._compile(filename, { filetype: "eps", loudly: false });
-        await this._rasterise();
-        await this._copy(filename, "png");
+      if (this.config.get("png.if")) {
+        await this.compile(filename, "eps", false);
+        await this.rasterise();
+        await this.copy(filename, "png");
       }
 
-      await this._updatePanel(filename, (await this._makePanel(filename)).panel);
+      await this.updatePanel(filename, (await this.makePanel(filename)).panel);
       console.log(`Lasy has fulfilled her work with ${filename}.asy!`);
     } catch (e) {
-      this._channel.appendLine(<string> e);
+      this.channel.appendLine(e as string);
       console.log(`Lasy could not fulfill her work with ${filename}.asy: ${e}`);
     } finally {
       console.log("");
     }
   }
 
-  private async _compile(filename: string, options: { filetype: string, loudly?: boolean }): Promise<void> {
-    console.log(`Lasy is making ${this._dir}/temp.${options.filetype}…`);
-    (({ stdout, stderr }) => {
-      if (options.loudly !== false) {
-        this._channel.appendLine(stdout);
-        this._channel.appendLine(stderr);
-      }
-    })(await exec(`${this._config.get("asyPath", "asy")} -f ${options.filetype} -outname ${this._dir}/temp ${filename}`,
-      { 'cwd': `${filename.split('/').slice(0, -1).join('/')}`}));
+  async wipe(filename: string): Promise<void> {
+    console.log(`Lasy is wiping the last sketches for ${filename}…`);
+    try {
+      cp.execSync(`rm -f ${this.dir}/temp.* ]`);
+    } catch (e) {
+      console.log(`Lasy has found nothing to wipe.`);
+    }
   }
 
-  private async _copy(filename: string, filetype: string): Promise<void> {
-    console.log(`Lasy is making ${filename}.${filetype}…`);
-    fs.copyFileSync(`${this._dir}/temp.${filetype}`, `${filename}.${filetype}`);
+  async compile(filename: string, filetype: string, loud?: boolean): Promise<void> {
+    console.log(`Lasy is making ${this.dir}/temp.${filetype}…`);
+
+    console.log(`Lasy is making a new ${this.dir}/temp.${filetype}…`);
+    ((lwrit) => { if (loud) {
+      console.log(lwrit);
+      this.channel.appendLine(lwrit);
+    }})(cp.execSync(`${this.config.get("asyPath", "asy")} -f ${filetype} -outname ${this.dir}/temp ${filename}`,
+                    { 'cwd': `${filename.split('/').slice(0, -1).join('/')}`})
+          .toString());
+
+    console.log(`Lasy is seeing if there was made a new ${this.dir}/temp.${filetype}…`);
+    cp.execSync(`[ -f ${this.dir}/temp.${filetype} ]`);
   }
 
-  private async _rasterise(): Promise<void> {
-    console.log(`Lasy is rasterising ${this._dir}/temp.eps to PNG…`);
-    (({ stdout, stderr }) => {
-      this._channel.appendLine(stdout);
-      this._channel.appendLine(stderr);
-    })(await exec(`gs -q -dSAFER -dBATCH -dNOPAUSE -dEPSCrop -sDEVICE=png16m -dGraphicsAlphaBits=4 \
-      -r${this._config.get("gs.dpi")} -sOutputFile=${this._dir}/temp.png ${this._dir}/temp.eps`
-    ));
+  async copy(filename: string, filetype: string): Promise<void> {
+    console.log(`Lasy is copying ${filename}.${filetype}…`);
+    fs.copyFileSync(`${this.dir}/temp.${filetype}`, `${filename}.${filetype}`);
   }
 
-  private async _makePanel(filename: string): Promise<Panel> {
-    if (this._panels.has(filename)) {
-      console.log(`Lasy has found there to already be a board for ${filename}!`);
+  async rasterise(): Promise<void> {
+    console.log(`Lasy is rasterising ${this.dir}/temp.eps to PNG…`);
+    cp.execSync(`gs -q -dSAFER -dBATCH -dNOPAUSE -dEPSCrop -sDEVICE=png16m -dGraphicsAlphaBits=4 \
+      -r${this.config.get("png.dpi")} -sOutputFile=${this.dir}/temp.png ${this.dir}/temp.eps`);
+  }
+
+  async makePanel(filename: string): Promise<Panel> {
+    if (this.panels.has(filename)) {
+      console.log(`Lasy has found there to already be a board for ${filename}.asy!`);
     } else {
-      console.log(`Lasy is building a board for ${filename}…`);
-      let panel: vscode.WebviewPanel = vscode.window.createWebviewPanel("", `Preview: ${path.basename(filename)}`, vscode.ViewColumn.Beside, { enableScripts: true });
-      let watcher: vscode.FileSystemWatcher = vscode.workspace.createFileSystemWatcher(filename);
-      panel.onDidDispose(() => {
-        this._panels.delete(filename);
-        watcher.dispose();
-      });
-      watcher.onDidChange(() => {
-        this._updatePanel(filename, panel);
-      });
-
-      this._panels.set(filename, {panel, watcher});
+      console.log(`Lasy is building a board for ${filename}.asy…`);
+      ((lp: vscode.WebviewPanel) => ((lw: vscode.FileSystemWatcher) => {
+        lp.onDidDispose(() => {
+          this.panels.delete(filename);
+          lw.dispose();
+        });
+        lw.onDidChange(() => this.updatePanel(filename, lp));
+        this.panels.set(filename, { panel: lp, watcher: lw });
+      })) (vscode.window.createWebviewPanel("", `Preview: ${path.basename(filename)}`,
+            { preserveFocus: true, viewColumn: vscode.ViewColumn.Beside }, { enableScripts: true })
+        ) (vscode.workspace.createFileSystemWatcher(filename));
     }
 
-    return this._panels.get(filename)!;
+    return this.panels.get(filename)!;
   }
 
-  private async _updatePanel(filename: string, panel: vscode.WebviewPanel): Promise<void> {
-    console.log(`Lasy is opening ${this._dir}/temp.svg…`);
-    const fd = fs.openSync(`${this._dir}/temp.svg`, 'r');
+  async updatePanel(filename: string, panel: vscode.WebviewPanel): Promise<void> {
+    console.log(`Lasy is opening ${this.dir}/temp.svg…`);
+    ((lfd) => ((lstats) => ((lsvgcontent) => {
+      console.log(`Lasy is reading ${this.dir}/temp.svg…`);
+      fs.readSync(lfd, lsvgcontent, 0, lstats.size, null);
 
-    console.log(`Lasy is reading ${this._dir}/temp.svg…`);
-    const stats = fs.fstatSync(fd);
-    let svgContent = Buffer.alloc(stats.size);
-    fs.readSync(fd, svgContent, 0, stats.size, null);
-
-    console.log(`Lasy is working on the board for ${filename}…`);
-    panel.webview.html = `
-      <style>
-        body { background: white; }
-      </style>
-      <h1>${[...filename.split('/')].pop()}</h1>
-      <div>
-        ${svgContent}
-      </div>
-    `;
+      console.log(`Lasy is working on the board for ${filename}.asy…`);
+      panel.webview.html = `
+        <style>
+          body { background: white; }
+        </style>
+        <h1>${[...filename.split('/')].pop()}</h1>
+        <div>
+          ${lsvgcontent}
+        </div>
+      `;
+    }) (Buffer.alloc(lstats.size))
+    ) (fs.fstatSync(lfd))
+    ) (fs.openSync(`${this.dir}/temp.svg`, 'r'));
   }
 }

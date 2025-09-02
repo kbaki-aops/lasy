@@ -2,43 +2,45 @@
   "name": "lasy",
   "displayName": "Lasy",
   "description": "I'm a VS Code extension that compiles Asymptote files to SVG format and displays the output.",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "publisher": "kbaki-aops",
-  "license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/kbaki-aops/lasy.git"
-	},
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kbaki-aops/lasy.git"
+  },
   "engines": {
-    "vscode": "^1.99.0"
+    "vscode": "^1.103.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": ["onStartupFinished"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
-		"configuration": {
-			"type": "object",
-			"title": "Lasy",
-			"properties": {
+    "configuration": {
+      "type": "object",
+      "title": "Lasy",
+      "properties": {
         "lasy.asyPath": {
           "type": "string",
           "default": "asy",
           "description": "Lasy's path to the asy binary."
         },
-        "lasy.png": {
+        "lasy.png.if": {
           "type": "boolean",
           "default": false,
-          "description": "EXPERIMENTAL, uses GhostScript: Whether Lasy should rasterise to PNG."
+          "description": "EXPERIMENTAL, uses GhostScript: If Lasy should rasterise to PNG."
         },
-        "lasy.gs.dpi": {
-          "type": "int",
+        "lasy.png.dpi": {
+          "type": "number",
           "default": 720,
           "description": "EXPERIMENTAL, uses GhostScript: The DPI of the PNG."
         }
-			}
-		}
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
@@ -51,12 +53,12 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "~22.17.2",
-    "@types/vscode": "^1.99.0",
-    "@typescript-eslint/eslint-plugin": "^8.40.0",
-    "@typescript-eslint/parser": "^8.40.0",
+    "@types/vscode": "^1.103.0",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
-    "eslint": "^9.33.0",
+    "eslint": "^9.34.0",
     "typescript": "^5.9.2"
   }
 }
