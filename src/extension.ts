@@ -15,8 +15,9 @@ type Panel = {
   watcher: vscode.FileSystemWatcher;
 }
 
-const when = <T>(condition: boolean) => (deed: T): T | void => { if (condition) { return deed; } };
+const when = <T>(condition: boolean) => (deed: () => T): T | void => { if (condition) { return deed(); } };
 const _map = <T,U>(f: ($t: T) => U) => (xs: T[]): U[] => xs.map(f);
+
 // go away linter
 // but thank u for ur lintwork
 // const loudly = <T>(thing: T): T => { console.log(thing); return thing; };
