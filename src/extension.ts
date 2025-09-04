@@ -103,12 +103,15 @@ class Lasy {
     console.log(`Lasy is making ${this.dir}/temp.${filetype}…`);
 
     console.log(`Lasy is making a new ${this.dir}/temp.${filetype}…`);
-    ((lwrit) => { if (loud) {
-      console.log(lwrit);
-      this.channel.appendLine(lwrit);
-    }})(cp.execSync(`${this.config.get("asyPath", "asy")} -f ${filetype} -outname ${this.dir}/temp ${filename}`,
-                    { 'cwd': `${filename.split('/').slice(0, -1).join('/')}`})
-          .toString());
+    try {
+      ((lwrit) => { if (loud && lwrit) {
+        console.log(lwrit);
+        this.channel.append(lwrit);
+      }})(cp.execSync(`${this.config.get("asyPath", "asy")} -f ${filetype} -outname ${this.dir}/temp ${filename}`,
+                      { 'cwd': `${filename.split('/').slice(0, -1).join('/')}`}).toString());
+    } catch (e) {
+      this.channel.append((e as { stderr: Buffer | string }).stderr.toString());
+    }
 
     console.log(`Lasy is seeing if there was made a new ${this.dir}/temp.${filetype}…`);
     cp.execSync(`[ -f ${this.dir}/temp.${filetype} ]`);
