@@ -2,7 +2,7 @@
   "name": "lasy",
   "displayName": "Lasy",
   "description": "I'm a VS Code extension that compiles Asymptote files to SVG format and displays the output.",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "publisher": "kbaki-aops",
   "license": "GPL-3.0-or-later",
   "repository": {

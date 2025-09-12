@@ -1,9 +1,15 @@
 # Change Log
 
-All notable changes to the "lasy" extension will be documented in this file.
+All of my notable changes are documented in this file. I try to use [semantic versioning](https://semver.org/), but I'm still learning.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+## [0.1.0] - 2025-09-12
 
-## [Unreleased]
+### Added
 
-- Initial release
+### Fixed
+
+### Changed
+
+- Channel output is prefixed with `>` and postfixed with `\n` to better demarcate output logs.
+
+### Removed

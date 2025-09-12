@@ -1,5 +1,3 @@
-"use strict";
-
 import vscode from "vscode";
 
 import fs from "fs";
@@ -17,18 +15,15 @@ type Panel = {
 
 const when = <T>(condition: boolean) => (deed: () => T): T | void => { if (condition) { return deed(); } };
 const _map = <T,U>(f: ($t: T) => U) => (xs: T[]): U[] => xs.map(f);
-
-// go away linter
-// but thank u for ur lintwork
+const backwards = (s: string): string => [...s].reverse().join('');
+const asunder = (wedge: string) => (s: string): string[] => s.split(wedge, 2);
+// thank you
 // const loudly = <T>(thing: T): T => { console.log(thing); return thing; };
 
 export function activate(): void {
   console.log("Lasy is waking up…");
   lasy = new Lasy();
   console.log("Lasy is awake!");
-
-  const backwards = (s: string): string => [...s].reverse().join('');
-  const asunder = (wedge: string) => (s: string): string[] => s.split(wedge, 2);
 
   vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) =>
     ((path: string[]) => (when (path[1] === 'asy') (() => lasy.work(path[0]))))
@@ -50,17 +45,13 @@ export function deactivate(): void {
 }
 
 class Lasy {
-  channel: vscode.OutputChannel;
-  config: vscode.WorkspaceConfiguration;
-  panels: Map<string, Panel>;
-  dir: string;
-
-  constructor() {
-    this.channel = vscode.window.createOutputChannel("lasy");
-    this.config = vscode.workspace.getConfiguration("lasy");
-    this.panels = new Map();
-    this.dir = fs.mkdtempSync(os.tmpdir());
-  }
+  constructor (
+    public channel: vscode.OutputChannel = vscode.window.createOutputChannel("lasy"),
+    public config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration("lasy"),
+    public panels: Map<string, Panel> = new Map<string, Panel>(),
+    public world: NodeJS.Platform = os.platform(),
+    public dir: string = fs.mkdtempSync(os.tmpdir()),
+  ) {}
 
   async work(filename: string): Promise<void> {
     console.log(`Lasy has begun her work with ${filename}.asy…`);
@@ -75,7 +66,7 @@ class Lasy {
       await this.copy(filename, "svg");
 
       if (this.config.get("png.if")) {
-        await this.compile(filename, "eps", false);
+        await this.compile(filename, "eps");
         await this.rasterise();
         await this.copy(filename, "png");
       }
@@ -93,28 +84,29 @@ class Lasy {
   async wipe(filename: string): Promise<void> {
     console.log(`Lasy is wiping the last sketches for ${filename}…`);
     try {
-      cp.execSync(`rm -f ${this.dir}/temp.* ]`);
+      fs.rmSync(`${this.dir}/temp.*`);
     } catch (e) {
       console.log(`Lasy has found nothing to wipe.`);
     }
   }
 
-  async compile(filename: string, filetype: string, loud?: boolean): Promise<void> {
+  async compile(filename: string, filetype: string, loud: boolean =false): Promise<void> {
     console.log(`Lasy is making ${this.dir}/temp.${filetype}…`);
 
     console.log(`Lasy is making a new ${this.dir}/temp.${filetype}…`);
     try {
-      ((lwrit) => { if (loud && lwrit) {
+      ((lwrit: string) => when (loud && !!lwrit) (() => {
         console.log(lwrit);
-        this.channel.append(lwrit);
-      }})(cp.execSync(`${this.config.get("asyPath", "asy")} -f ${filetype} -outname ${this.dir}/temp ${filename}`,
+        this.channel.append(`> ${lwrit}\n`);
+      }))(cp.execSync(`${this.config.get("asyPath", "asy")} -f ${filetype} -outname ${this.dir}/temp ${filename}`,
                       { 'cwd': `${filename.split('/').slice(0, -1).join('/')}`}).toString());
     } catch (e) {
-      this.channel.append((e as { stderr: Buffer | string }).stderr.toString());
+      this.channel.append(`> ${(e as { stderr: Buffer | string }).stderr.toString()}\n`);
+      throw new Error();
     }
 
     console.log(`Lasy is seeing if there was made a new ${this.dir}/temp.${filetype}…`);
-    cp.execSync(`[ -f ${this.dir}/temp.${filetype} ]`);
+    fs.existsSync(`${this.dir}/temp.${filetype}`);
   }
 
   async copy(filename: string, filetype: string): Promise<void> {
@@ -133,16 +125,16 @@ class Lasy {
       console.log(`Lasy has found there to already be a board for ${filename}.asy!`);
     } else {
       console.log(`Lasy is building a board for ${filename}.asy…`);
-      ((lp: vscode.WebviewPanel) => ((lw: vscode.FileSystemWatcher) => {
-        lp.onDidDispose(() => {
+      ((panel: vscode.WebviewPanel) => ((watcher: vscode.FileSystemWatcher) => {
+        panel.onDidDispose(() => {
           this.panels.delete(filename);
-          lw.dispose();
+          watcher.dispose();
         });
-        lw.onDidChange(() => this.updatePanel(filename, lp));
-        this.panels.set(filename, { panel: lp, watcher: lw });
+        watcher.onDidChange(() => this.updatePanel(filename, panel));
+        this.panels.set(filename, { panel, watcher });
       })) (vscode.window.createWebviewPanel("", `Preview: ${path.basename(filename)}`,
             { preserveFocus: true, viewColumn: vscode.ViewColumn.Beside }, { enableScripts: true })
-        ) (vscode.workspace.createFileSystemWatcher(filename));
+          ) (vscode.workspace.createFileSystemWatcher(filename));
     }
 
     return this.panels.get(filename)!;
@@ -150,20 +142,19 @@ class Lasy {
 
   async updatePanel(filename: string, panel: vscode.WebviewPanel): Promise<void> {
     console.log(`Lasy is opening ${this.dir}/temp.svg…`);
-    ((lfd) => ((lstats) => ((lsvgcontent) => {
+    ((lfd: number) => ((lstats: fs.Stats) => ((lsvgcontent: Buffer<ArrayBuffer>) => {
       console.log(`Lasy is reading ${this.dir}/temp.svg…`);
       fs.readSync(lfd, lsvgcontent, 0, lstats.size, null);
 
       console.log(`Lasy is working on the board for ${filename}.asy…`);
-      panel.webview.html = `
-        <style>
-          body { background: white; }
-        </style>
-        <h1>${[...filename.split('/')].pop()}</h1>
-        <div>
-          ${lsvgcontent}
-        </div>
-      `;
+      panel.webview.html =
+`<style>
+  body { background: white; }
+</style>
+<h1>${[...filename.split('/')].pop()}</h1>
+<div>
+  ${lsvgcontent}
+</div>`;
     }) (Buffer.alloc(lstats.size))
     ) (fs.fstatSync(lfd))
     ) (fs.openSync(`${this.dir}/temp.svg`, 'r'));
